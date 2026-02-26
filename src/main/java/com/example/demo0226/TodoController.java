@@ -1,5 +1,7 @@
-﻿package com.example.demo0226;
+package com.example.demo0226;
 
+import com.example.demo0226.model.Todo;
+import com.example.demo0226.service.TodoService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,21 +9,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @Controller
 @RequestMapping("/todo")
 public class TodoController {
 
+    private final TodoService todoService;
+
+    public TodoController(TodoService todoService) {
+        this.todoService = todoService;
+    }
+
     @GetMapping
     public String list(Model model) {
-        List<TodoItem> todos = List.of(
-                new TodoItem(1L, "Spring Bootプロジェクト作成", "完了"),
-                new TodoItem(2L, "Controller実装", "進行中"),
-                new TodoItem(3L, "一覧画面作成", "未着手")
-        );
-
-        model.addAttribute("todos", todos);
+        model.addAttribute("todos", todoService.findAll());
         return "todo/list";
     }
 
@@ -37,11 +37,12 @@ public class TodoController {
     }
 
     @PostMapping("/complete")
-    public String complete(@RequestParam("title") String title, Model model) {
-        model.addAttribute("title", title);
-        return "todo/complete";
-    }
-
-    public record TodoItem(Long id, String title, String status) {
+    public String complete(@RequestParam("title") String title) {
+        Todo todo = Todo.builder()
+                .title(title)
+                .completed(false)
+                .build();
+        todoService.insert(todo);
+        return "redirect:/todo";
     }
 }
